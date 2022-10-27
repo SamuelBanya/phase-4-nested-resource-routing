@@ -1,0 +1,182 @@
+* Notes
+I used the following commands to setup the lab:
+#+begin_src bash
+bundle install
+rails db:migrate db:seed
+rails s
+#+end_src
+
+REST for review stands for:
+- REST: Representational State Transfer
+
+I then visited the 'http://localhost:3000/reviews' URL in the Chrome browser and received the following JSON response:
+
+NOTE: This is a condensed version of the output:
+#+begin_src json
+// 20221026195300
+// http://localhost:3000/reviews
+
+[
+  {
+    "id": 1,
+    "username": "kristofer",
+    "comment": "Health fanny pack sartorial viral tumblr yuccie quinoa deep v.",
+    "rating": 4,
+    "dog_house_id": 1,
+    "created_at": "2022-10-27T00:52:05.825Z",
+    "updated_at": "2022-10-27T00:52:05.825Z",
+    "dog_house": {
+      "id": 1,
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRGu3wZzqFNT3IGEQZKDVzGQMbPQOgRZ4e_lxzlPiPdwtDxhIJH&usqp=CAU",
+      "name": "Mid Century Flat in Beautiful Uptown",
+      "city": "Chicago",
+      "price": 33,
+      "favorite": false,
+      "latitude": "41.883855",
+      "longitude": "-87.631462",
+      "created_at": "2022-10-27T00:52:04.661Z",
+      "updated_at": "2022-10-27T00:52:04.661Z"
+    }
+  },
+  {
+    "id": 2,
+    "username": "demetrius.vonrueden",
+    "comment": "Schlitz bitters brunch chillwave drinking authentic plaid.",
+    "rating": 5,
+    "dog_house_id": 1,
+    "created_at": "2022-10-27T00:52:05.830Z",
+    "updated_at": "2022-10-27T00:52:05.830Z",
+    "dog_house": {
+      "id": 1,
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRGu3wZzqFNT3IGEQZKDVzGQMbPQOgRZ4e_lxzlPiPdwtDxhIJH&usqp=CAU",
+      "name": "Mid Century Flat in Beautiful Uptown",
+      "city": "Chicago",
+      "price": 33,
+      "favorite": false,
+      "latitude": "41.883855",
+      "longitude": "-87.631462",
+      "created_at": "2022-10-27T00:52:04.661Z",
+      "updated_at": "2022-10-27T00:52:04.661Z"
+    }
+  },
+  {
+    "id": 3,
+    "username": "odessa.lang",
+    "comment": "Organic bitters cray etsy meggings austin cronut.",
+    "rating": 2,
+    "dog_house_id": 1,
+    "created_at": "2022-10-27T00:52:05.835Z",
+    "updated_at": "2022-10-27T00:52:05.835Z",
+    "dog_house": {
+      "id": 1,
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRGu3wZzqFNT3IGEQZKDVzGQMbPQOgRZ4e_lxzlPiPdwtDxhIJH&usqp=CAU",
+      "name": "Mid Century Flat in Beautiful Uptown",
+      "city": "Chicago",
+      "price": 33,
+      "favorite": false,
+      "latitude": "41.883855",
+      "longitude": "-87.631462",
+      "created_at": "2022-10-27T00:52:04.661Z",
+      "updated_at": "2022-10-27T00:52:04.661Z"
+    }
+  },
+  {
+    "id": 4,
+    "username": "karole_armstrong",
+    "comment": "Seitan squid dreamcatcher beard bicycle rights mlkshk cold-pressed put a bird on it retro.",
+    "rating": 4,
+    "dog_house_id": 1,
+    "created_at": "2022-10-27T00:52:05.840Z",
+    "updated_at": "2022-10-27T00:52:05.840Z",
+    "dog_house": {
+      "id": 1,
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRGu3wZzqFNT3IGEQZKDVzGQMbPQOgRZ4e_lxzlPiPdwtDxhIJH&usqp=CAU",
+      "name": "Mid Century Flat in Beautiful Uptown",
+      "city": "Chicago",
+      "price": 33,
+      "favorite": false,
+      "latitude": "41.883855",
+      "longitude": "-87.631462",
+      "created_at": "2022-10-27T00:52:04.661Z",
+      "updated_at": "2022-10-27T00:52:04.661Z"
+    }
+  },
+#+end_src
+
+I then visited the 'http://localhost:3000/reviews?doghouse=1' URL and received a similar JSON response to the above output (which doesn't make sense).
+
+Note On This Lab's Relationships:
+- A 'Dog House' has many 'Reviews'
+- Therefore, a 'Review' is considered as a child object of the 'Dog House' model or a 'nested resource' of the 'Dog House' model.
+
+I then made the following revisions to 'config/routes.rb':
+#+begin_src ruby
+Rails.application.routes.draw do
+  resources :reviews, only: [:index]
+  resources :dog_houses, only: [:show] do
+    # Nested resource for reviews which only allows the
+    # ':show' and ':index' actions when 'reviews' is
+    # obtained as a nested resource from 'dog_houses':
+    resources :reviews, only: [:show, :index]
+  end
+
+  # This however allows for all normal ':show', ':index',
+  # and ':create' actions for 'reviews' obtained normally
+  # without the nested relationship:
+  resources :reviews, only: [:show, :index, :create]
+  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+end
+#+end_src
+
+I then checked the available routes with the 'rails routes' command which showed the proper separation of concerns with the relationships of the models presented in the lab:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-nested-resource-routing $ rails routes
+   Prefix Verb URI Pattern               Controller#Action
+dog_house GET  /dog_houses/:id(.:format) dog_houses#show
+  reviews GET  /reviews(.:format)        reviews#index
+          POST /reviews(.:format)        reviews#create
+   review GET  /reviews/:id(.:format)    reviews#show
+#+end_src
+
+
+I then revised the 'app/controllers/reviews_controller.rb' Reviews Controller controller file with the following revisions:
+#+begin_src ruby
+class ReviewsController < ApplicationController
+
+  def index
+    if params[:dog_house_id]
+      dog_house = DogHouse.find(params[:dog_house_id])
+      reviews = dog_house.reviews()
+    else
+      reviews = Review.all()
+    end
+    render json: reviews, include: :dog_house
+  end
+
+end
+#+end_src
+
+I then revised the 'app/controllers/dog_houses_controller.rb' Controller file with the following revisions:
+#+begin_src ruby
+class DogHousesController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
+
+  def show
+    dog_house = DogHouse.find(params[:id])
+    render json: dog_house
+  end
+
+  private
+
+  def render_not_found_response
+    render json: { error: "Dog house not found" }, status: :not_found
+  end
+
+end
+#+end_src
+
+Answers To Check Your Understanding:
+- Q1. What are the benefits of using nested routes?
+- Answer: The benefits include tidier routes and a better looking route that better reflects what is typical of a RESTful route to represent parent / child relationship
+- Q2. How do we distinguish nested routes from parent routes in our routes.rb file?
+- Answer: Look for a second 'resources' line underneath an existing one that has another associated model present with limited associated actions
